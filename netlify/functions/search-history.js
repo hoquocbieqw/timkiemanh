@@ -33,7 +33,11 @@ exports.handler = async function(event, context) {
     const collection = client.db(process.env.MONGODB_DB_NAME).collection('search_history');
     
     // Lưu bản ghi tìm kiếm
+    console.log("📥 Dữ liệu chuẩn bị insert:", searchRecord);
+
     await collection.insertOne(searchRecord);
+
+    console.log("✅ Đã insert thành công!");
     
     await client.close();
     
