@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Lịch Sử Tìm Kiếm</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .admin-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .search-history-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    .search-history-table th, 
+    .search-history-table td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .search-history-table thead {
+      background-color: var(--button-color);
+      color: white;
+    }
+    .search-history-table tbody tr:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+    .login-container {
+      max-width: 400px;
+      margin: 100px auto;
+      padding: 20px;
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    .stats-boxes {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .stats-box {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    .stats-box h3 {
+      font-size: 2rem;
+      margin: 10px 0;
+      color: var(--button-color);
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <button id="theme-toggle" class="theme-toggle" aria-label="Chuyển đổi chế độ sáng/tối">
+      <i class="fas fa-sun light-icon"></i>
+      <i class="fas fa-moon dark-icon"></i>
+    </button>
+    
+    <div id="login-section" class="login-container">
+      <h2>Đăng Nhập Admin</h2>
+      <form id="login-form">
+        <div style="margin-bottom: 15px;">
+          <label for="api-key">API Key:</label>
+          <input type="password" id="api-key" required style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid var(--input-border); border-radius: 4px;">
+        </div>
+        <button type="submit" class="search-button" style="width: 100%; border-radius: 4px;">Đăng Nhập</button>
+      </form>
+    </div>
+    
+    <div id="dashboard-section" style="display: none;">
+      <header>
+        <h1>Dashboard Lịch Sử Tìm Kiếm</h1>
+        <p>Quản lý và phân tích dữ liệu tìm kiếm người dùng</p>
+      </header>
+      
+      <div id="stats-container" class="stats-boxes">
+        <!-- Thống kê sẽ được thêm bằng JavaScript -->
+      </div>
+      
+      <div id="search-options" style="margin-bottom: 20px;">
+        <input type="text" id="filter-input" placeholder="Lọc kết quả..." style="padding: 10px; width: 300px; border: 1px solid var(--input-border); border-radius: 4px;">
+        <select id="limit-select" style="padding: 10px; margin-left: 10px; border: 1px solid var(--input-border); border-radius: 4px;">
+          <option value="20">20 kết quả</option>
+          <option value="50" selected>50 kết quả</option>
+          <option value="100">100 kết quả</option>
+        </select>
+      </div>
+      
+      <div id="table-container">
+        <table class="search-history-table">
+          <thead>
+            <tr>
+              <th>Từ khóa</th>
+              <th>Từ khóa không dấu</th>
+              <th>Thời gian</th>
+              <th>IP</th>
+            </tr>
+          </thead>
+          <tbody id="search-history-data">
+            <!-- Dữ liệu lịch sử tìm kiếm sẽ được thêm bằng JavaScript -->
+          </tbody>
+        </table>
+      </div>
+      
+      <div id="pagination" class="pagination" style="margin-top: 20px;">
+        <!-- Phân trang sẽ được thêm bằng JavaScript -->
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Chức năng chuyển đổi chế độ sáng/tối
+    const themeToggle = document.getElementById('theme-toggle');
+    
+    // Kiểm tra trạng thái theme từ localStorage
+    if (localStorage.getItem('darkMode') === 'true') {
+      document.body.classList.add('dark-mode');
+    }
+    
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      const isDarkMode = document.body.classList.contains('dark-mode');
+      localStorage.setItem('darkMode', isDarkMode);
+    });
+    
+    // Biến lưu trữ API key
+    let apiKey = '';
+    let currentPage = 1;
+    let searchFilter = '';
+    let itemsPerPage = 50;
+    
+    // Form đăng nhập
+    const loginForm = document.getElementById('login-form');
+    const loginSection = document.getElementById('login-section');
+    const dashboardSection = document.getElementById('dashboard-section');
+    const apiKeyInput = document.getElementById('api-key');
+    
+    // Kiểm tra nếu đã lưu API key trong sessionStorage
+    const savedApiKey = sessionStorage.getItem('admin_api_key');
+    if (savedApiKey) {
+      apiKey = savedApiKey;
+      showDashboard();
+    }
+    
+    // Xử lý sự kiện đăng nhập
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      apiKey = apiKeyInput.value.trim();
+      
+      if (apiKey) {
+        // Lưu API key vào sessionStorage
+        sessionStorage.setItem('admin_api_key', apiKey);
+        showDashboard();
+      }
+    });
+    
+    // Hiển thị dashboard và tải dữ liệu
+    function showDashboard() {
+      loginSection.style.display = 'none';
+      dashboardSection.style.display = 'block';
+      loadSearchHistory();
+      loadStats();
+    }
+    
+    // Tải dữ liệu lịch sử tìm kiếm
+    async function loadSearchHistory() {
+      try {
+        const response = await fetch(`/.netlify/functions/get-search-history?key=${apiKey}&page=${currentPage}&limit=${itemsPerPage}&filter=${encodeURIComponent(searchFilter)}`);
+        
+        if (response.status === 401) {
+          alert('API key không hợp lệ. Vui lòng đăng nhập lại.');
+          sessionStorage.removeItem('admin_api_key');
+          loginSection.style.display = 'block';
+          dashboardSection.style.display = 'none';
+          return;
+        }
+        
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        displaySearchHistory(data.searches);
+        displayPagination(data.pagination);
+      } catch (error) {
+        console.error('Error loading search history:', error);
+      }
+    }
+    
+    // Tải thống kê
+    async function loadStats() {
+      try {
+        const response = await fetch(`/.netlify/functions/search-stats?key=${apiKey}`);
+        
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        displayStats(data);
+      } catch (error) {
+        console.error('Error loading stats:', error);
+      }
+    }
+    
+    // Hiển thị dữ liệu lịch sử tìm kiếm
+    function displaySearchHistory(searches) {
+      const tableBody = document.getElementById('search-history-data');
+      tableBody.innerHTML = '';
+      
+      if (searches.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="4">Không có dữ liệu tìm kiếm</td></tr>`;
+        return;
+      }
+      
+      searches.forEach(search => {
+        const row = document.createElement('tr');
+        const date = new Date(search.timestamp);
+        
+        row.innerHTML = `
+          <td>${search.query}</td>
+          <td>${search.normalizedQuery}</td>
+          <td>${date.toLocaleString('vi-VN')}</td>
+          <td>${search.ip}</td>
+        `;
+        
+        tableBody.appendChild(row);
+      });
+    }
+    
+    // Hiển thị phân trang
+    function displayPagination(pagination) {
+      const paginationDiv = document.getElementById('pagination');
+      paginationDiv.innerHTML = '';
+      
+      if (pagination.pages <= 1) return;
+      
+      // Nút Previous
+      if (pagination.page > 1) {
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'page-btn';
+        prevBtn.textContent = 'Trước';
+        prevBtn.addEventListener('click', () => {
+          currentPage--;
+          loadSearchHistory();
+          window.scrollTo(0, 0);
+        });
+        paginationDiv.appendChild(prevBtn);
+      }
+      
+      // Các nút số trang
+      const startPage = Math.max(1, pagination.page - 2);
+      const endPage = Math.min(pagination.pages, pagination.page + 2);
+      
+      for (let i = startPage; i <= endPage; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.className = `page-btn ${i === pagination.page ? 'active' : ''}`;
+        pageBtn.textContent = i;
+        
+        pageBtn.addEventListener('click', () => {
+          currentPage = i;
+          loadSearchHistory();
+          window.scrollTo(0, 0);
+        });
+        
+        paginationDiv.appendChild(pageBtn);
+      }
+      
+      // Nút Next
+      if (pagination.page < pagination.pages) {
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'page-btn';
+        nextBtn.textContent = 'Tiếp';
+        nextBtn.addEventListener('click', () => {
+          currentPage++;
+          loadSearchHistory();
+          window.scrollTo(0, 0);
+        });
+        paginationDiv.appendChild(nextBtn);
+      }
+    }
+    
+    // Hiển thị thống kê
+    function displayStats(stats) {
+      const statsContainer = document.getElementById('stats-container');
+      statsContainer.innerHTML = `
+        <div class="stats-box">
+          <p>Tổng lượt tìm kiếm</p>
+          <h3>${stats.totalSearches}</h3>
+        </div>
+        <div class="stats-box">
+          <p>Từ khóa phổ biến nhất</p>
+          <h3>${stats.mostPopularSearch?.query || 'N/A'}</h3>
+          <p>${stats.mostPopularSearch?.count || 0} lượt</p>
+        </div>
+        <div class="stats-box">
+          <p>Tìm kiếm hôm nay</p>
+          <h3>${stats.searchesToday}</h3>
+        </div>
+        <div class="stats-box">
+          <p>Số người dùng khác nhau</p>
+          <h3>${stats.uniqueUsers}</h3>
+        </div>
+      `;
+    }
+    
+    // Xử lý lọc kết quả
+    const filterInput = document.getElementById('filter-input');
+    filterInput.addEventListener('input', debounce(function() {
+      searchFilter = this.value.trim();
+      currentPage = 1;
+      loadSearchHistory();
+    }, 500));
+    
+    // Xử lý thay đổi số lượng kết quả hiển thị
+    const limitSelect = document.getElementById('limit-select');
+    limitSelect.addEventListener('change', function() {
+      itemsPerPage = parseInt(this.value);
+      currentPage = 1;
+      loadSearchHistory();
+    });
+    
+    // Hàm debounce để giảm số lần gọi hàm
+    function debounce(func, wait) {
+      let timeout;
+      return function() {
+        const context = this;
+        const args = arguments;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          func.apply(context, args);
+        }, wait);
+      };
+    }
+  </script>
+</body>
+</html>

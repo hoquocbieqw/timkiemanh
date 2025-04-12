@@ -1,0 +1,25 @@
+{
+    "name": "unsplash-image-search",
+    "version": "1.0.0",
+    "description": "Ứng dụng tìm kiếm ảnh với Unsplash API",
+    "main": "index.js",
+    "scripts": {
+      "start": "netlify dev",
+      "build": "echo 'No build step needed'"
+    },
+    "keywords": [
+      "unsplash",
+      "images",
+      "search"
+    ],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+      "mongodb": "^5.1.0"
+    },
+    "devDependencies": {
+      "netlify-cli": "^15.0.0"
+    
+    }
+  }
+  
