@@ -1,0 +1,34 @@
+{
+    "name": "unsplash-image-search",
+    "version": "1.0.0",
+    "description": "Ứng dụng tìm kiếm ảnh với Unsplash API",
+    "main": "index.js",
+    "scripts": {
+        "start": "netlify dev",
+        "build": "echo 'No build step needed'"
+    },
+    "keywords": [
+        "unsplash",
+        "images",
+        "search"
+    ],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "cors": "^2.8.5",
+        "express": "^5.1.0",
+        "mongodb": "^5.1.0",
+        "mongoose": "^8.13.2"
+    },
+    "devDependencies": {
+        "netlify-cli": "^15.0.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/hoquocbieqw/timkiemanh.git"
+    },
+    "bugs": {
+        "url": "https://github.com/hoquocbieqw/timkiemanh/issues"
+    },
+    "homepage": "https://github.com/hoquocbieqw/timkiemanh#readme"
+}
